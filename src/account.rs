@@ -1,6 +1,7 @@
 use client::*;
 use errors::*;
-use serde_json::from_str;
+use serde_json::{from_str, Value};
+use log::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct Wallet { 
@@ -8,7 +9,9 @@ pub struct Wallet {
     pub currency: String,                   
     pub balance: f64,
     pub unsettled_interest: f64,
-    pub balance_available: Option<f64>             
+    pub balance_available: Option<f64>,
+    pub last_change: Option<String>,
+    pub trade_details: Option<Value>     
 }
 
 #[derive(Serialize, Deserialize)]
@@ -79,7 +82,7 @@ impl Account {
     pub fn get_wallets(&self) -> Result<Vec<Wallet>> {
         let payload: String = format!("{}", "{}");
         let data = self.client.post_signed("wallets".into(), payload)?;
-
+        debug!("Wallets response: {}", data.as_str());
         let wallets: Vec<Wallet> = from_str(data.as_str())?;
 
         Ok(wallets)
