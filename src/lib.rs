@@ -20,14 +20,14 @@ extern crate url;
 #[macro_use] 
 extern crate serde_derive;
 
-mod book;
-mod client;
-mod ticker;
-mod trades;
-mod orders;
-mod account;
-mod ledger;
-mod auth;
+pub mod book;
+pub mod client;
+pub mod ticker;
+pub mod trades;
+pub mod orders;
+pub mod account;
+pub mod ledger;
+pub mod auth;
 
 pub mod candles;
 pub mod api;
