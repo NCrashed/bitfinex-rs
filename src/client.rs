@@ -5,9 +5,11 @@ use reqwest::{StatusCode, Response};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, USER_AGENT, CONTENT_TYPE};
 use std::io::Read;
 use serde::Serialize;
+use log::*;
 
 static API1_HOST : &'static str = "https://api.bitfinex.com/v2/";
 static API_SIGNATURE_PATH : &'static str = "/api/v2/auth/r/";
+static API_SIGNATURE_PATH_W : &'static str = "/api/v2/auth/w/";
 static NO_PARAMS: &'static [(); 0] = &[];
 
 #[derive(Clone)]
@@ -57,9 +59,51 @@ impl Client {
         self.handler(response)
     }
 
+    pub fn post_w_signed(&self, request: String, payload: String) -> Result<String> {
+        self.post_w_signed_params(request, payload, NO_PARAMS)
+    }
+
+    pub fn post_w_signed_params<P: Serialize + ?Sized>(
+        &self,
+        request: String,
+        payload: String,
+        params: &P,
+    ) -> Result<String> {
+        let url: String = format!("{}auth/w/{}", API1_HOST, request);
+        let headers = self.build_w_headers(request, payload.clone())?;
+
+        let client = reqwest::Client::new();
+        trace!("URL: {}", url.as_str());
+        trace!("Headers: {:?}", headers);
+        let mut response = client.post(url.as_str())
+            .headers(headers)
+            .body(payload)
+            .query(params)
+            .send()?;
+        trace!("Response: {response:?}");
+        trace!("Response body: {}", response.text()?);
+        self.handler(response)
+    }
+
     fn build_headers(&self, request: String, payload: String) -> Result<HeaderMap> {
         let nonce: String = auth::generate_nonce()?;
         let signature_path: String = format!("{}{}{}{}", API_SIGNATURE_PATH, request, nonce, payload);
+
+        let signature = auth::sign_payload(self.secret_key.as_bytes(), signature_path.as_bytes())?;
+
+        let mut headers = HeaderMap::new();
+        headers.insert(USER_AGENT, HeaderValue::from_static("bitfinex-rs"));
+        headers.insert(HeaderName::from_static("bfx-nonce"), HeaderValue::from_str(nonce.as_str())?);
+        headers.insert(HeaderName::from_static("bfx-apikey"), HeaderValue::from_str(self.api_key.as_str())?);
+        headers.insert(HeaderName::from_static("bfx-signature"), HeaderValue::from_str(signature.as_str())?);
+        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+
+        Ok(headers)
+    }
+
+    fn build_w_headers(&self, request: String, payload: String) -> Result<HeaderMap> {
+        let nonce: String = auth::generate_nonce()?;
+        let signature_path: String = format!("{}{}{}{}", API_SIGNATURE_PATH_W, request, nonce, payload);
 
         let signature = auth::sign_payload(self.secret_key.as_bytes(), signature_path.as_bytes())?;
 

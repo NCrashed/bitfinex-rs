@@ -86,6 +86,12 @@ pub struct InvoiceInfo {
     pub amount: String,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct LnAddressReq {
+    pub method: String, 
+    pub wallet: String,
+}
+
 impl Account {
     pub fn new(api_key: Option<String>, secret_key: Option<String>) -> Self {
         Account {
@@ -142,11 +148,27 @@ impl Account {
         Ok(info)
     }
 
+    // If this is the first time you are generating an LNX invoice on your account, you will first need to create a deposit address. To do this, call w/deposit/address with { method: 'LNX', wallet: 'exchange' }
+    pub fn generate_invoice_address(&self)  -> Result<()> {
+        let req = LnAddressReq {
+            method: "LNX".to_owned(),
+            wallet: "exchange".to_owned(),
+        };
+        let payload: String = serde_json::to_string(&req)?;
+        let request: String = format!("deposit/address");
+
+        debug!("Payload: {payload}");
+        self.client.post_w_signed(request, payload)?;
+
+        Ok(())
+    }
+
     pub fn generate_invoice(&self, req: InvoiceReq) -> Result<InvoiceInfo> {
         let payload: String = serde_json::to_string(&req)?;
         let request: String = format!("deposit/invoice");
+        debug!("Payload: {payload}");
 
-        let data = self.client.post_signed(request, payload)?;
+        let data = self.client.post_w_signed(request, payload)?;
 
         let info: InvoiceInfo = from_str(data.as_str())?;
 
