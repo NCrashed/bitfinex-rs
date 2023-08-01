@@ -94,6 +94,46 @@ pub struct LnAddressReq {
     pub wallet: String,
 }
 
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct TransferReq {
+    pub from: String, 
+    pub to: String, 
+    pub currency: String, 
+    pub currency_to: Option<String>,
+    pub amount: String, 
+    // pub email_dst: Option<String>, 
+    // pub user_id_dst: Option<i32>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct TransferResp {
+    pub mts: i64, 
+    pub notification_type: String,
+    #[serde(skip_serializing)]
+    pub _unknown_field1: Option<String>,
+    pub message_id: Option<String>, 
+    pub info: TransferRespInfo,
+    pub code: Option<String>,
+    pub status: String,
+    pub text: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct TransferRespInfo {
+    pub mts_updated: Option<i64>,
+    pub wallet_from: String, 
+    pub wallet_to: String, 
+    #[serde(skip_serializing)]
+    pub _unknown_field1: Option<String>,
+    pub currency: String, 
+    pub currency_to: String, 
+    #[serde(skip_serializing)]
+    pub _unknown_field2: Option<String>,
+    pub amount: f64,
+}
+
+// [1690900849181,"acc_tf",null,null,[1690900849181,"exchange","exchange",null,"LNX","BTC",null,0.00034754],null,"SUCCESS","0.00034754 Bitcoin (Lightning Network) transfered from Exchange to Exchange"]
 impl Account {
     pub fn new(api_key: Option<String>, secret_key: Option<String>) -> Self {
         Account {
@@ -175,5 +215,29 @@ impl Account {
         let info: InvoiceInfo = from_str(data.as_str())?;
 
         Ok(info)
+    }
+
+    pub fn transfer(&self, req: TransferReq) -> Result<TransferResp> {
+        let payload: String = serde_json::to_string(&req)?;
+        let request: String = format!("transfer");
+        debug!("Payload: {payload}");
+
+        let data = self.client.post_w_signed(request, payload)?;
+
+        let info: TransferResp = from_str(data.as_str())?;
+
+        Ok(info)
+    }
+
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_transfer_resp() {
+        let data = "[1690901416558,\"acc_tf\",null,null,[1690901416558,\"exchange\",\"exchange\",null,\"LNX\",\"BTC\",null,0.00034774],null,\"SUCCESS\",\"0.00034774 Bitcoin (Lightning Network) transfered from Exchange to Exchange\"]";
+        let _: TransferResp = from_str(data).expect("parsed"); 
     }
 }

@@ -75,13 +75,13 @@ impl Client {
         let client = reqwest::Client::new();
         trace!("URL: {}", url.as_str());
         trace!("Headers: {:?}", headers);
-        let mut response = client.post(url.as_str())
+        let response = client.post(url.as_str())
             .headers(headers)
             .body(payload)
             .query(params)
             .send()?;
         trace!("Response: {response:?}");
-        trace!("Response body: {}", response.text()?);
+        // info!("Response body: {}", response.text()?);
         self.handler(response)
     }
 
