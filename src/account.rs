@@ -83,6 +83,8 @@ pub struct InvoiceReq {
 pub struct InvoiceInfo {
     pub invoice_hash: String,
     pub invoice: String,
+    pub _placeholder1: Option<String>,
+    pub _placehodler2: Option<String>,
     pub amount: String,
 }
 
