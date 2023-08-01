@@ -35,8 +35,8 @@ pub enum DataEvent {
     HeartbeatEvent (i32, String)
 }
 
-#[serde(rename_all = "camelCase")]
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AuthMessage {
     pub event: String,
     pub status: String,
@@ -53,8 +53,8 @@ impl AuthMessage {
     }
 }
 
-#[serde(rename_all = "camelCase")]
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct InfoMessage {
     pub event: String,
     pub version: u16,
@@ -67,8 +67,8 @@ pub struct Platform {
     pub status: u16,
 }
 
-#[serde(rename_all = "camelCase")]
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TradingSubscriptionMessage {
     pub event: String,
     pub channel: String,
@@ -77,8 +77,8 @@ pub struct TradingSubscriptionMessage {
     pub pair: String
 }
 
-#[serde(rename_all = "camelCase")]
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FundingSubscriptionMessage {
     pub event: String,
     pub channel: String,
@@ -87,8 +87,8 @@ pub struct FundingSubscriptionMessage {
     pub currency: String
 }
 
-#[serde(rename_all = "camelCase")]
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CandlesSubscriptionMessage {
     pub event: String,
     pub channel: String,
@@ -96,8 +96,8 @@ pub struct CandlesSubscriptionMessage {
     pub key: String
 }
 
-#[serde(rename_all = "camelCase")]
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RawBookSubscriptionMessage {
     pub event: String,
     pub channel: String,
