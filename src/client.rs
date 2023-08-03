@@ -125,6 +125,9 @@ impl Client {
                 return Ok(body);
             },
             StatusCode::INTERNAL_SERVER_ERROR => {
+                let mut body = String::new();
+                response.read_to_string(&mut body)?;
+                error!("Returned response: {body}");
                 bail!("Internal Server Error");
             }
             StatusCode::SERVICE_UNAVAILABLE => {

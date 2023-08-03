@@ -133,6 +133,48 @@ pub struct TransferRespInfo {
     pub amount: f64,
 }
 
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct WithdrawReq {
+    pub wallet: String,
+    pub method: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub amount: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub address: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub invoice: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payment_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fee_deduct: Option<i32>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct WithdrawResp {
+    pub mts: i64,
+    pub notification_type: String, 
+    pub message_id: Option<i64>,
+    pub _placeholder: Option<Value>,
+    pub data: WithdrawData,
+    pub code: Option<i64>,
+    pub status: String,
+    pub text: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct WithdrawData {
+    pub withdrawal_id: Option<i64>,
+    pub _placehodler1: Option<Value>,
+    pub method: String, 
+    pub payment_id: Option<String>, 
+    pub wallet: String,
+    pub amount: f32, 
+    pub _placeholder2: Option<Value>,
+    pub _placeholder3: Option<Value>,
+    pub withdraw_fee: f32,
+}
+
 // [1690900849181,"acc_tf",null,null,[1690900849181,"exchange","exchange",null,"LNX","BTC",null,0.00034754],null,"SUCCESS","0.00034754 Bitcoin (Lightning Network) transfered from Exchange to Exchange"]
 impl Account {
     pub fn new(api_key: Option<String>, secret_key: Option<String>) -> Self {
@@ -223,12 +265,23 @@ impl Account {
         debug!("Payload: {payload}");
 
         let data = self.client.post_w_signed(request, payload)?;
-
+        info!("Response: {}", data.as_str());
         let info: TransferResp = from_str(data.as_str())?;
 
         Ok(info)
     }
 
+    pub fn withdraw(&self, req: WithdrawReq) -> Result<WithdrawResp> {
+        let payload: String = serde_json::to_string(&req)?;
+        let request: String = format!("withdraw");
+        debug!("Payload: {payload}");
+
+        let data = self.client.post_w_signed(request, payload)?;
+        info!("Response: {}", data.as_str());
+        let info: WithdrawResp = from_str(data.as_str())?;
+
+        Ok(info)
+    }
 }
 
 #[cfg(test)]
@@ -239,5 +292,11 @@ mod tests {
     fn test_transfer_resp() {
         let data = "[1690901416558,\"acc_tf\",null,null,[1690901416558,\"exchange\",\"exchange\",null,\"LNX\",\"BTC\",null,0.00034774],null,\"SUCCESS\",\"0.00034774 Bitcoin (Lightning Network) transfered from Exchange to Exchange\"]";
         let _: TransferResp = from_str(data).expect("parsed"); 
+    }
+
+    #[test]
+    fn test_withdrawal_resp() {
+        let data = "[1568742390999,\"acc_wd-req\",null,null,[13080092,null,\"ethereum\",null,\"exchange\",0.01,null,null,0.00135],null,\"SUCCESS\",\"Your withdrawal request has been successfully submitted.\"]";
+        let _: WithdrawResp = from_str(data).expect("parsed"); 
     }
 }
