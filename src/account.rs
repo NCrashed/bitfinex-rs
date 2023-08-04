@@ -164,7 +164,7 @@ pub struct WithdrawResp {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WithdrawData {
-    pub withdrawal_id: Option<i64>,
+    pub withdrawal_id: i64,
     pub _placehodler1: Option<Value>,
     pub method: String, 
     pub payment_id: Option<String>, 
@@ -175,7 +175,47 @@ pub struct WithdrawData {
     pub withdraw_fee: f32,
 }
 
-// [1690900849181,"acc_tf",null,null,[1690900849181,"exchange","exchange",null,"LNX","BTC",null,0.00034754],null,"SUCCESS","0.00034754 Bitcoin (Lightning Network) transfered from Exchange to Exchange"]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct MovementReq {
+    pub id: i64, 
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct MovementResp {
+    pub id: i64, 
+    pub currency: String, 
+    pub method: String, 
+    pub _placehodler1: Option<Value>, 
+    pub remark: Option<String>,
+    pub mts_started: i64, 
+    pub mts_updated: i64, 
+    pub _placeholder2: Option<Value>,
+    pub _placeholder3: Option<Value>,
+    pub status: String, 
+    pub _placeholder4: Option<Value>,
+    pub _placeholder5: Option<Value>,
+    pub amount: f64, 
+    pub fees: f64, 
+    pub _placeholder6: Option<Value>,
+    pub _placeholder7: Option<Value>,
+    pub destination_address: Option<String>, 
+    pub memo: Option<String>, 
+    pub _placeholder8: Option<Value>,
+    pub _placeholder9: Option<Value>,
+    pub transaction_id: Option<String>, 
+    pub movement_note: Option<String>, 
+    pub _placeholder10: Option<Value>,
+    pub _placeholder11: Option<Value>,
+    pub bank_fees: Option<f64>, 
+    pub bank_router_id: Option<i64>,
+    pub _placeholder12: Option<Value>,
+    pub _placeholder13: Option<Value>,
+    pub external_bank_mov_id: Option<String>,
+    pub external_bank_mov_status: Option<String>, 
+    pub external_bank_mov_description: Option<String>,
+    pub external_bank_mov_acc_info: Option<Value>, 
+}
+
 impl Account {
     pub fn new(api_key: Option<String>, secret_key: Option<String>) -> Self {
         Account {
@@ -282,6 +322,18 @@ impl Account {
 
         Ok(info)
     }
+
+    pub fn movement_info(&self, req: MovementReq) -> Result<MovementResp> {
+        let payload: String = serde_json::to_string(&req)?;
+        let request: String = format!("movements/info");
+        debug!("Payload: {payload}");
+
+        let data = self.client.post_signed(request, payload)?;
+        info!("Response: {}", data.as_str());
+        let info: MovementResp = from_str(data.as_str())?;
+
+        Ok(info)
+    }
 }
 
 #[cfg(test)]
@@ -298,5 +350,11 @@ mod tests {
     fn test_withdrawal_resp() {
         let data = "[1568742390999,\"acc_wd-req\",null,null,[13080092,null,\"ethereum\",null,\"exchange\",0.01,null,null,0.00135],null,\"SUCCESS\",\"Your withdrawal request has been successfully submitted.\"]";
         let _: WithdrawResp = from_str(data).expect("parsed"); 
+    }
+
+    #[test]
+    fn test_movement_resp() {
+        let data = "[24,\"EUR\",\"WIRE\",null,\"remark related to bank details\",1677086074000,1677086210000,null,null,\"COMPLETED\",null,null,-29.5,-0.5,null,null,null,null,null,null,null,\"testing note\",null,null,0,123,null,null,\"abcd-1234\",\"COMPLETED\",\"finished withdrawal in platform\",{\"router\":\"my-router\",\"meta\":{\"foo\":\"bar\"}}]";
+        let _: MovementResp = from_str(data).expect("parsed"); 
     }
 }
